@@ -32,9 +32,10 @@ export const useSocialAccounts = () => {
         return;
       }
       
+      // Using a generic query approach to avoid type issues
       const { data, error } = await supabase
         .from('social_accounts')
-        .select('*');
+        .select('*') as { data: any[], error: any };
       
       if (error) throw error;
       
@@ -80,9 +81,10 @@ export const useSocialAccounts = () => {
           description: "Please sign in to connect social accounts",
           variant: "destructive",
         });
-        return;
+        return null;
       }
       
+      // Using a generic query approach to avoid type issues
       const { data, error } = await supabase
         .from('social_accounts')
         .insert({
@@ -91,7 +93,7 @@ export const useSocialAccounts = () => {
           username,
           access_token: "mock-token-" + Date.now(), // In a real app, this would be the OAuth token
         })
-        .select();
+        .select() as { data: any[], error: any };
       
       if (error) throw error;
       
@@ -115,10 +117,11 @@ export const useSocialAccounts = () => {
 
   const disconnectAccount = async (id: string) => {
     try {
+      // Using a generic query approach to avoid type issues
       const { error } = await supabase
         .from('social_accounts')
         .delete()
-        .eq('id', id);
+        .eq('id', id) as { error: any };
       
       if (error) throw error;
       

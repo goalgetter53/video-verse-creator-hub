@@ -29,10 +29,11 @@ export const useScheduledPosts = () => {
         return;
       }
       
+      // Using a generic query approach to avoid type issues
       const { data, error } = await supabase
         .from('scheduled_posts')
         .select('*')
-        .order('scheduled_for', { ascending: true });
+        .order('scheduled_for', { ascending: true }) as { data: any[], error: any };
       
       if (error) throw error;
       
@@ -76,6 +77,7 @@ export const useScheduledPosts = () => {
         return null;
       }
       
+      // Using a generic query approach to avoid type issues
       const { data, error } = await supabase
         .from('scheduled_posts')
         .insert({
@@ -84,7 +86,7 @@ export const useScheduledPosts = () => {
           scheduled_for: scheduledFor.toISOString(),
           platforms
         })
-        .select();
+        .select() as { data: any[], error: any };
       
       if (error) throw error;
       
@@ -108,10 +110,11 @@ export const useScheduledPosts = () => {
 
   const deletePost = async (id: string) => {
     try {
+      // Using a generic query approach to avoid type issues
       const { error } = await supabase
         .from('scheduled_posts')
         .delete()
-        .eq('id', id);
+        .eq('id', id) as { error: any };
       
       if (error) throw error;
       

@@ -42,13 +42,13 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<AuthPage />} />
-          <Route path="/create" element={<CreateVideo />} />
-          <Route path="/captions" element={<CaptionEditor />} />
-          <Route path="/share" element={<SocialShare />} />
-          <Route path="/schedule" element={<SchedulePage />} />
-          <Route path="/analytics" element={<AnalyticsPage />} />
-          <Route path="/account" element={<AccountPage />} />
-          <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/create" element={<ProtectedRoute><CreateVideo /></ProtectedRoute>} />
+          <Route path="/captions" element={<ProtectedRoute><CaptionEditor /></ProtectedRoute>} />
+          <Route path="/share" element={<ProtectedRoute><SocialShare /></ProtectedRoute>} />
+          <Route path="/schedule" element={<ProtectedRoute><SchedulePage /></ProtectedRoute>} />
+          <Route path="/analytics" element={<ProtectedRoute><AnalyticsPage /></ProtectedRoute>} />
+          <Route path="/account" element={<ProtectedRoute><AccountPage /></ProtectedRoute>} />
+          <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
