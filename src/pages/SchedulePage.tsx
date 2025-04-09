@@ -1,5 +1,6 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,23 +10,32 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { CalendarIcon, Clock, Plus, Check, Trash2, Pencil } from "lucide-react";
+import { CalendarIcon, Clock, Plus, Trash2, Pencil, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/utils/auth";
+import { useScheduledPosts } from "@/utils/scheduledPosts";
 
 const SchedulePage = () => {
   const [date, setDate] = useState<Date | undefined>(undefined);
   const [time, setTime] = useState<string>("12:00");
+  const [content, setContent] = useState<string>("New Video Post");
   const [selectedPlatform, setSelectedPlatform] = useState<string>("instagram");
-  const [scheduledPosts, setScheduledPosts] = useState([
-    { id: 1, title: "Product Demo", platform: "Instagram", date: new Date(2025, 3, 11), time: "14:30" },
-    { id: 2, title: "Team Update", platform: "LinkedIn", date: new Date(2025, 3, 15), time: "10:00" },
-    { id: 3, title: "Feature Announcement", platform: "Twitter", date: new Date(2025, 3, 20), time: "16:45" },
-  ]);
+  const [isScheduling, setIsScheduling] = useState(false);
+  
   const { toast } = useToast();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const { posts, loading, schedulePost, deletePost } = useScheduledPosts();
 
-  const handleSchedulePost = () => {
+  useEffect(() => {
+    if (!user) {
+      navigate("/auth");
+    }
+  }, [user, navigate]);
+
+  const handleSchedulePost = async () => {
     if (!date) {
       toast({
         title: "Date required",
@@ -35,34 +45,34 @@ const SchedulePage = () => {
       return;
     }
 
-    // Add new scheduled post
-    const newPost = {
-      id: scheduledPosts.length + 1,
-      title: "New Video Post",
-      platform: selectedPlatform,
-      date: date,
-      time: time,
+    setIsScheduling(true);
+    
+    // Create a Date object with the selected date and time
+    const scheduledDateTime = new Date(date);
+    const [hours, minutes] = time.split(':').map(Number);
+    scheduledDateTime.setHours(hours, minutes);
+
+    // Create platforms object
+    const platforms = {
+      [selectedPlatform]: true
     };
 
-    setScheduledPosts([...scheduledPosts, newPost]);
-    
-    toast({
-      title: "Post scheduled",
-      description: `Your post has been scheduled for ${format(date, "PPP")} at ${time}`,
-    });
+    await schedulePost(content, scheduledDateTime, platforms);
     
     // Reset form
     setDate(undefined);
     setTime("12:00");
+    setContent("New Video Post");
+    setIsScheduling(false);
   };
 
-  const handleDeletePost = (id: number) => {
-    setScheduledPosts(scheduledPosts.filter(post => post.id !== id));
-    toast({
-      title: "Post removed",
-      description: "The scheduled post has been removed.",
-    });
+  const handleDeletePost = async (id: string) => {
+    await deletePost(id);
   };
+
+  if (!user) {
+    return null; // Or a loading state
+  }
 
   return (
     <AppLayout>
@@ -93,6 +103,15 @@ const SchedulePage = () => {
                     <SelectItem value="youtube">YouTube</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <Label>Post Content</Label>
+                <Input
+                  value={content}
+                  onChange={(e) => setContent(e.target.value)}
+                  placeholder="Enter post content"
+                />
               </div>
               
               <div className="space-y-2">
@@ -142,9 +161,22 @@ const SchedulePage = () => {
               </div>
             </CardContent>
             <CardFooter>
-              <Button className="w-full" onClick={handleSchedulePost}>
-                <Plus className="mr-2 h-4 w-4" />
-                Schedule Post
+              <Button 
+                className="w-full" 
+                onClick={handleSchedulePost}
+                disabled={isScheduling}
+              >
+                {isScheduling ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Scheduling...
+                  </>
+                ) : (
+                  <>
+                    <Plus className="mr-2 h-4 w-4" />
+                    Schedule Post
+                  </>
+                )}
               </Button>
             </CardFooter>
           </Card>
@@ -155,7 +187,11 @@ const SchedulePage = () => {
               <CardDescription>Manage your upcoming content</CardDescription>
             </CardHeader>
             <CardContent>
-              {scheduledPosts.length > 0 ? (
+              {loading ? (
+                <div className="flex justify-center py-8">
+                  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                </div>
+              ) : posts.length > 0 ? (
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -167,10 +203,10 @@ const SchedulePage = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {scheduledPosts.map((post) => (
+                    {posts.map((post) => (
                       <TableRow key={post.id}>
                         <TableCell className="font-medium">{post.title}</TableCell>
-                        <TableCell>{post.platform}</TableCell>
+                        <TableCell className="capitalize">{post.platform}</TableCell>
                         <TableCell>{format(post.date, "MMM dd, yyyy")}</TableCell>
                         <TableCell>{post.time}</TableCell>
                         <TableCell className="text-right">

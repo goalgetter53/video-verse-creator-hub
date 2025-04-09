@@ -1,5 +1,6 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,18 +10,37 @@ import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Facebook, Instagram, Linkedin, Twitter, Youtube, Check, Upload, User, Shield, BellRing, ChevronRight, Trash2, Plus } from "lucide-react";
+import { Facebook, Instagram, Linkedin, Twitter, Youtube, Check, Upload, User, Shield, BellRing, ChevronRight, Trash2, Plus, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/utils/auth";
+import { useSocialAccounts } from "@/utils/socialAccounts";
 
 const AccountPage = () => {
   const { toast } = useToast();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const { accounts, loading, connectAccount, disconnectAccount } = useSocialAccounts();
   const [isEditing, setIsEditing] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [newPlatform, setNewPlatform] = useState("instagram");
+  const [newUsername, setNewUsername] = useState("");
   const [formData, setFormData] = useState({
     name: "Jane Smith",
-    email: "jane.smith@example.com",
+    email: "",
     company: "Creative Studios Inc.",
     bio: "Video creator and marketing specialist with 5+ years of experience in digital content creation.",
   });
+
+  useEffect(() => {
+    if (!user && !loading) {
+      navigate("/auth");
+    } else if (user) {
+      setFormData(prev => ({
+        ...prev,
+        email: user.email || "",
+      }));
+    }
+  }, [user, loading, navigate]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -38,13 +58,36 @@ const AccountPage = () => {
     });
   };
 
-  const connectedAccounts = [
-    { platform: "Instagram", username: "@janesmith", icon: Instagram, connected: true, color: "bg-pink-500" },
-    { platform: "Facebook", username: "Jane Smith", icon: Facebook, connected: true, color: "bg-blue-600" },
-    { platform: "Twitter", username: "@janesmith", icon: Twitter, connected: false, color: "bg-sky-400" },
-    { platform: "LinkedIn", username: "jane-smith", icon: Linkedin, connected: true, color: "bg-blue-700" },
-    { platform: "YouTube", username: "Jane Smith", icon: Youtube, connected: false, color: "bg-red-600" },
-  ];
+  const handleConnectNewAccount = async () => {
+    if (!newUsername.trim()) {
+      toast({
+        title: "Username required",
+        description: "Please enter a username for the account",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setIsConnecting(true);
+    await connectAccount(newPlatform, newUsername);
+    setIsConnecting(false);
+    setNewUsername("");
+  };
+
+  const getPlatformIcon = (platform: string) => {
+    switch (platform.toLowerCase()) {
+      case 'instagram': return <Instagram className="h-5 w-5" />;
+      case 'facebook': return <Facebook className="h-5 w-5" />;
+      case 'twitter': return <Twitter className="h-5 w-5" />;
+      case 'linkedin': return <Linkedin className="h-5 w-5" />;
+      case 'youtube': return <Youtube className="h-5 w-5" />;
+      default: return <User className="h-5 w-5" />;
+    }
+  };
+
+  if (!user) {
+    return null; // Or a loading state
+  }
 
   return (
     <AppLayout>
@@ -72,7 +115,7 @@ const AccountPage = () => {
                   <div className="flex flex-col items-center space-y-2">
                     <Avatar className="h-24 w-24">
                       <AvatarImage src="https://ui.shadcn.com/avatars/01.png" alt="Profile picture" />
-                      <AvatarFallback>JS</AvatarFallback>
+                      <AvatarFallback>{formData.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
                     </Avatar>
                     <Button variant="outline" size="sm">
                       <Upload className="h-4 w-4 mr-2" /> 
@@ -100,7 +143,7 @@ const AccountPage = () => {
                           type="email"
                           value={formData.email}
                           onChange={handleInputChange}
-                          readOnly={!isEditing}
+                          readOnly={true}
                         />
                       </div>
                       <div className="space-y-2">
@@ -202,36 +245,90 @@ const AccountPage = () => {
                 <CardDescription>Manage your connected social media accounts</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                {connectedAccounts.map((account) => (
-                  <div key={account.platform} className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <div className={`${account.color} p-2 rounded-full mr-4`}>
-                        <account.icon className="h-5 w-5 text-white" />
+                {loading ? (
+                  <div className="flex justify-center py-6">
+                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                  </div>
+                ) : accounts.length > 0 ? (
+                  accounts.map((account) => (
+                    <div key={account.id} className="flex items-center justify-between">
+                      <div className="flex items-center">
+                        <div className={`${account.color} p-2 rounded-full mr-4`}>
+                          {getPlatformIcon(account.platform)}
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-medium capitalize">{account.platform}</h4>
+                          <p className="text-sm text-muted-foreground">{account.username}</p>
+                        </div>
                       </div>
-                      <div>
-                        <h4 className="text-sm font-medium">{account.platform}</h4>
-                        <p className="text-sm text-muted-foreground">{account.username}</p>
-                      </div>
-                    </div>
-                    {account.connected ? (
                       <div className="flex items-center">
                         <span className="flex items-center text-sm text-green-500 mr-4">
                           <Check className="h-4 w-4 mr-1" /> Connected
                         </span>
-                        <Button variant="outline" size="sm">Disconnect</Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => disconnectAccount(account.id)}
+                        >
+                          Disconnect
+                        </Button>
                       </div>
-                    ) : (
-                      <Button size="sm">Connect</Button>
-                    )}
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-6 text-muted-foreground">
+                    No connected accounts yet. Connect one to get started.
                   </div>
-                ))}
+                )}
+
+                <Separator className="my-4" />
+                
+                <div className="space-y-4">
+                  <h4 className="text-sm font-medium">Connect New Account</h4>
+                  <div className="flex flex-col space-y-4 sm:flex-row sm:space-y-0 sm:space-x-4">
+                    <div className="flex-1">
+                      <Label htmlFor="platform" className="sr-only">Platform</Label>
+                      <select 
+                        id="platform"
+                        className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                        value={newPlatform}
+                        onChange={(e) => setNewPlatform(e.target.value)}
+                      >
+                        <option value="instagram">Instagram</option>
+                        <option value="facebook">Facebook</option>
+                        <option value="twitter">Twitter</option>
+                        <option value="linkedin">LinkedIn</option>
+                        <option value="youtube">YouTube</option>
+                      </select>
+                    </div>
+                    <div className="flex-1">
+                      <Label htmlFor="username" className="sr-only">Username</Label>
+                      <Input 
+                        id="username" 
+                        placeholder="Username" 
+                        value={newUsername}
+                        onChange={(e) => setNewUsername(e.target.value)}
+                      />
+                    </div>
+                    <Button 
+                      onClick={handleConnectNewAccount}
+                      disabled={isConnecting}
+                    >
+                      {isConnecting ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Connecting...
+                        </>
+                      ) : (
+                        <>
+                          <Plus className="mr-2 h-4 w-4" />
+                          Connect
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
               </CardContent>
-              <CardFooter>
-                <Button className="w-full">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Connect New Account
-                </Button>
-              </CardFooter>
             </Card>
           </TabsContent>
           

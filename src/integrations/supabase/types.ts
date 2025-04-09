@@ -60,6 +60,72 @@ export type Database = {
         }
         Relationships: []
       }
+      scheduled_posts: {
+        Row: {
+          content: string
+          created_at: string | null
+          id: string
+          media_url: string | null
+          platforms: Json
+          scheduled_for: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          id?: string
+          media_url?: string | null
+          platforms: Json
+          scheduled_for: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          id?: string
+          media_url?: string | null
+          platforms?: Json
+          scheduled_for?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      social_accounts: {
+        Row: {
+          access_token: string | null
+          connected_at: string | null
+          expires_at: string | null
+          id: string
+          platform: string
+          refresh_token: string | null
+          user_id: string
+          username: string
+        }
+        Insert: {
+          access_token?: string | null
+          connected_at?: string | null
+          expires_at?: string | null
+          id?: string
+          platform: string
+          refresh_token?: string | null
+          user_id: string
+          username: string
+        }
+        Update: {
+          access_token?: string | null
+          connected_at?: string | null
+          expires_at?: string | null
+          id?: string
+          platform?: string
+          refresh_token?: string | null
+          user_id?: string
+          username?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
