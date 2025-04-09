@@ -9,7 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Facebook, Instagram, Linkedin, Twitter, Youtube, Check, Upload, User, Shield, BellRing, ChevronRight, Trash2 } from "lucide-react";
+import { Facebook, Instagram, Linkedin, Twitter, Youtube, Check, Upload, User, Shield, BellRing, ChevronRight, Trash2, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const AccountPage = () => {
