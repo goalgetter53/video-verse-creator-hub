@@ -2,17 +2,14 @@
 import React, { useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar as CalendarIcon, Clock, Plus, Upload, Loader2, Facebook, Instagram, Twitter, Linkedin, Youtube, Globe, Share2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
-import { cn } from "@/lib/utils";
+import PlatformSelector from "@/components/share/PlatformSelector";
+import PostPreview from "@/components/share/PostPreview";
+import ScheduleOptions from "@/components/share/ScheduleOptions";
+import ShareButton from "@/components/share/ShareButton";
+import SharePageHeader from "@/components/share/SharePageHeader";
 
 const SocialShare = () => {
   const [date, setDate] = useState<Date | undefined>(undefined);
@@ -85,21 +82,10 @@ const SocialShare = () => {
     }
   };
 
-  const platformIcons = {
-    instagram: <Instagram className="h-5 w-5" />,
-    facebook: <Facebook className="h-5 w-5" />,
-    twitter: <Twitter className="h-5 w-5" />,
-    linkedin: <Linkedin className="h-5 w-5" />,
-    youtube: <Youtube className="h-5 w-5" />,
-  };
-
   return (
     <AppLayout>
       <div className="space-y-6 animate-fade-in">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Share & Schedule</h1>
-          <p className="text-muted-foreground mt-1">Share your video to social media or schedule for later</p>
-        </div>
+        <SharePageHeader isScheduled={isScheduled} />
 
         <Tabs defaultValue="share" onValueChange={(value) => setIsScheduled(value === "schedule")}>
           <TabsList className="grid w-full max-w-md grid-cols-2">
@@ -119,67 +105,15 @@ const SocialShare = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="video-container rounded-md overflow-hidden border bg-black/5 flex items-center justify-center">
-                  <div className="text-center p-12">
-                    <Share2 className="h-16 w-16 mx-auto text-muted-foreground/50 mb-4" />
-                    <p className="text-muted-foreground">Your video is ready to share</p>
-                  </div>
-                </div>
-                
-                <div className="p-4 border rounded-lg">
-                  <p className="text-sm">
-                    🎬 Introducing our new product line! We've designed these with you in mind, focusing on quality and sustainability. Check out the link in bio to learn more about our eco-friendly initiatives. #NewProduct #Sustainability #Innovation
-                  </p>
-                </div>
+                <PostPreview />
                 
                 <TabsContent value="schedule" className="space-y-4 mt-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Schedule Date</Label>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant="outline"
-                            className={cn(
-                              "w-full justify-start text-left font-normal",
-                              !date && "text-muted-foreground"
-                            )}
-                          >
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {date ? format(date, "PPP") : "Select a date"}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={date}
-                            onSelect={setDate}
-                            initialFocus
-                            disabled={(date) => date < new Date()}
-                          />
-                        </PopoverContent>
-                      </Popover>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="time">Schedule Time</Label>
-                      <div className="flex items-center">
-                        <Button
-                          variant="outline"
-                          className="w-full justify-start text-left font-normal"
-                        >
-                          <Clock className="mr-2 h-4 w-4" />
-                          <Input
-                            id="time"
-                            type="time"
-                            value={time}
-                            onChange={(e) => setTime(e.target.value)}
-                            className="border-0 p-0 focus-visible:ring-0"
-                          />
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
+                  <ScheduleOptions
+                    date={date}
+                    setDate={setDate}
+                    time={time}
+                    setTime={setTime}
+                  />
                 </TabsContent>
               </CardContent>
             </Card>
@@ -190,56 +124,18 @@ const SocialShare = () => {
                 <CardDescription>Select where to share your video</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {Object.entries(selectedPlatforms).map(([platform, checked]) => (
-                    <div key={platform} className="flex items-center space-x-2">
-                      <Checkbox 
-                        id={platform} 
-                        checked={checked} 
-                        onCheckedChange={() => togglePlatform(platform as keyof typeof selectedPlatforms)} 
-                      />
-                      <Label htmlFor={platform} className="flex items-center cursor-pointer">
-                        <div className="mr-2">
-                          {platformIcons[platform as keyof typeof platformIcons]}
-                        </div>
-                        <span className="capitalize">{platform}</span>
-                      </Label>
-                    </div>
-                  ))}
-                  
-                  <Button variant="outline" className="w-full mt-2">
-                    <Plus className="mr-2 h-4 w-4" />
-                    Connect More Accounts
-                  </Button>
-                </div>
+                <PlatformSelector 
+                  selectedPlatforms={selectedPlatforms}
+                  togglePlatform={togglePlatform}
+                />
               </CardContent>
               <CardFooter>
-                <Button
-                  className="w-full"
-                  onClick={handleShare}
-                  disabled={loading || !Object.values(selectedPlatforms).some(v => v)}
-                >
-                  {loading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      {isScheduled ? "Scheduling..." : "Sharing..."}
-                    </>
-                  ) : (
-                    <>
-                      {isScheduled ? (
-                        <>
-                          <Clock className="mr-2 h-4 w-4" />
-                          Schedule Post
-                        </>
-                      ) : (
-                        <>
-                          <Upload className="mr-2 h-4 w-4" />
-                          Share Now
-                        </>
-                      )}
-                    </>
-                  )}
-                </Button>
+                <ShareButton
+                  loading={loading}
+                  isScheduled={isScheduled}
+                  handleShare={handleShare}
+                  disabled={!Object.values(selectedPlatforms).some(v => v)}
+                />
               </CardFooter>
             </Card>
           </div>
