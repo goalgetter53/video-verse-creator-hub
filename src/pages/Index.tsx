@@ -3,7 +3,7 @@ import React from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Video, Upload, Clock, BarChart3, RefreshCw, Plus, Film } from "lucide-react";
+import { Video, Upload, Clock, BarChart3, RefreshCw, Plus, Film, Pencil } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const Index = () => {
